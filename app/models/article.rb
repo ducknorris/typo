@@ -61,6 +61,25 @@ class Article < Content
 
   setting :password,                   :string, ''
 
+  def merge_with(merge_id)
+    merge_article = Article.find_by_id(merge_id)
+    return nil unless merge_article
+
+    if self != merge_article
+      new_article = user.articles.create({
+        body:      "#{body} #{merge_article.body}",
+        comments:  comments + merge_article.comments,
+        title:     title,
+        published: true
+      })
+      merge_article.reload.destroy
+      self.reload.destroy
+      new_article
+    else
+      nil
+    end
+  end
+
   def initialize(*args)
     super
     # Yes, this is weird - PDC
@@ -104,10 +123,10 @@ class Article < Content
     end
 
     def search_with_pagination(search_hash, paginate_hash)
-      
+
       state = (search_hash[:state] and ["no_draft", "drafts", "published", "withdrawn", "pending"].include? search_hash[:state]) ? search_hash[:state] : 'no_draft'
-      
-      
+
+
       list_function  = ["Article.#{state}"] + function_search_no_draft(search_hash)
 
       if search_hash[:category] and search_hash[:category].to_i > 0

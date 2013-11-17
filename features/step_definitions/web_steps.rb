@@ -67,11 +67,18 @@ And /^I am logged as "(.*)" with "(.*)"$/ do |user, pass|
   end
 end
 
-Given /^"(.*?)" has "(.*?)" article created$/ do |user, title|
+Given /^"(.*?)" has "(.*?)" article created$/ do |username, title|
+  user = User.find_by_login(username)
   Article.create!({
       title:   title,
+      body:    "#{title.gsub(' ', '-')}-body",
       user_id: user
     })
+end
+
+And /^I fill in "(.*)" with "(.*)" article ID$/ do |placeholder, title|
+  article = Article.find_by_title(title)
+  fill_in placeholder, with: article.id
 end
 
 # Single-line step scoper
