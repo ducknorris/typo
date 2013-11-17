@@ -184,25 +184,25 @@ describe Article do
   ### XXX: Should we have a test here?
   it "test_send_multiple_pings" do
   end
-  
+
   describe "Testing redirects" do
     it "a new published article gets a redirect" do
       a = Article.create(:title => "Some title", :body => "some text", :published => true)
       a.redirects.first.should_not be_nil
       a.redirects.first.to_path.should == a.permalink_url
     end
-    
-    it "a new unpublished article should not get a redirect" do 
+
+    it "a new unpublished article should not get a redirect" do
       a = Article.create(:title => "Some title", :body => "some text", :published => false)
       a.redirects.first.should be_nil
     end
-    
+
     it "Changin a published article permalink url should only change the to redirection" do
       a = Article.create(:title => "Some title", :body => "some text", :published => true)
       a.redirects.first.should_not be_nil
       a.redirects.first.to_path.should == a.permalink_url
       r  = a.redirects.first.from_path
-      
+
       a.permalink = "some-new-permalink"
       a.save
       a.redirects.first.should_not be_nil
@@ -571,7 +571,7 @@ describe Article do
     describe "#find_by_permalink" do
       it "uses UTC to determine correct day" do
         @a.save
-        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 21, :permalink => 'a-big-article' 
+        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 21, :permalink => 'a-big-article'
         a.should == @a
       end
     end
@@ -592,7 +592,7 @@ describe Article do
     describe "#find_by_permalink" do
       it "uses UTC to determine correct day" do
         @a.save
-        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 22, :permalink => 'a-big-article' 
+        a = Article.find_by_permalink :year => 2011, :month => 2, :day => 22, :permalink => 'a-big-article'
         a.should == @a
       end
     end
@@ -629,6 +629,47 @@ describe Article do
       end
     end
 
+  end
+
+  describe "#merge_with" do
+    before do
+      @first_article = Factory.create(:article)
+      @second_article = Factory.create(:article)
+      @second_article.update_attributes(title: 'Page 2', body: 'Page 2 body')
+
+      3.times { Factory(:comment, :article => @first_article) }
+      3.times { Factory(:comment, :article => @second_article) }
+    end
+
+    subject { @first_article.merge_with(@second_article) }
+
+    it "should contain the text of both articles" do
+      subject.body.should include(@first_article.body, @second_article.body)
+    end
+
+    it "should have one author (either one of the authors of the two original articles)" do
+      subject.user.should satisfy{|s| [@first_article.user, @second_article.user].include?(s) }
+    end
+
+    it "should contain comments of both articles" do
+      subject.comments.should include(*@first_article.comments, *@second_article.comments)
+    end
+
+    it "should have the title from either one of the merged articles" do
+      subject.title.should satisfy{|s| [@first_article.title, @second_article.title].include?(s) }
+    end
+
+    it "should return nil when trying to merge the same article" do
+      @first_article.merge_with(@first_article).should be nil
+    end
+
+    it "should return nil when trying to merge with non-existent article" do
+      @first_article.merge_with(999).should be nil
+    end
+
+    it "should destroy merged articles" do
+      lambda { subject }.should change(Article, :count).by(-1)
+    end
   end
 end
 

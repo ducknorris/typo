@@ -20,6 +20,12 @@ module NavigationHelpers
     when /^the edit article "(.*)" page$/
       article = Article.find_by_title($1)
       "/admin/content/edit/#{article.id}"
+    when /^article "(.*)" page$/
+      article = Article.find_by_title($1)
+      article.permalink_url(nil, true)
+    when /^latest article page$/
+      article = Article.last
+      article.permalink_url(nil, true)
 
     # Add more mappings here.
     # Here is an example that pulls values out of the Regexp:
