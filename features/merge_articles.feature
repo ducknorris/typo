@@ -23,7 +23,7 @@ Feature: Merge Articles
     Given I am logged as "admin" with "aaaaaa"
     And I am on the edit article "Test Page" page
     Then I should see "Merge Articles"
-    And I fill in "article_merge_with" with "Test Page 2" article ID
+    And I fill in "merge_with" with "Test Page 2" article ID
     And I press "Merge"
     Then I should be on latest article page
     And I should see "Test Page"
